@@ -5,10 +5,14 @@
 <%@ page import="java.util.Enumeration" %>
 <%@ page import="java.util.Iterator" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<script type="text/javascript" src="/checkout/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="/checkout/js/test.js"></script>
 <%
   final String locString = request.getParameter("loc");
   final String contentIn = request.getParameter("content");
   final StringBuilder content = new StringBuilder();
+
   try {
         DirectAccess access = DirectAccess.getDirectAccess();
         SystemConnection connection = access.getUserSystemConnection(request);
@@ -35,8 +39,9 @@
                   }
 
                 content.append(result);
+              content.append("\nPASSED: Good location: "+locString);
               } catch (UnresolvableException e) {
-                   content.append("BAD location: "+locString);
+                   content.append("\nFAILED: Bad location: "+locString);
               }
           }
 
@@ -47,13 +52,25 @@
         e.printStackTrace(System.err);
         content.append("ERROR RUNNING ADDON:"+e.getMessage());
     }
+    String display = request.getParameter("display");
+    if(display==null)
+      content.append("\nMISSING \"display\" parameter");
+    else
+      content.append("\n"+display);
 %>
-<textarea rows="5" cols="60" id="content"><%=content%></textarea>
-<button id="doit">Save Comment</button>
+<textarea rows="4" cols="100" id="content"><%=content%></textarea><br>
+<button id="doit">Save Comment</button><input type="text" id="comment" value="Comment added to datastore after pressing 'Save' button" style="width:270px;">
 <script type="text/javascript">
     $(function() {
         $('#doit').bind('click', function() {
-            $.get('/checkout/include.jsp', {content: $("#content").text(), loc: frameManager.treeGqlLocation } )
-      })
+            $.get('/checkout/include.jsp', {content: $("#comment").val(), loc: "<%=locString%>" } )
+        });
     })
+
+   var currentValue = $("#content").val()
+   if(window.testAddonVariable)
+      $("#content").val(currentValue+"\n"+testAddonVariable);
+   else
+      $("#content").val(currentValue+"\nFAILED: external js variable not defined");
+
 </script>
